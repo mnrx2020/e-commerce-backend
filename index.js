@@ -11,7 +11,10 @@ require("dotenv").config()
 
 
 app.use(express.json())
-app.use(cors())
+app.use(express.urlencoded({extended:false}))
+app.use(cors({
+    origin:["http://localhost:4000","https://mnrx-mern-e-commerce-frontend-app.onrender.com","https://mnrx-mern-e-commerce-admin-app.onrender.com","https://mnrx-mern-e-commerce-backend-app-api.onrender.com"]
+}))
 
 //Database Connection with NongoDB
 mongoose.connect(process.env.MONGO_URI)
