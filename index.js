@@ -9,6 +9,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 app.use(express.json());
+app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
     origin: [
