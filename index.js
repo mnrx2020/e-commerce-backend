@@ -13,7 +13,7 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
     origin: [
-        "http://localhost:3000",
+        "http://localhost:4000",
         "https://mnrx-mern-e-commerce-frontend-app.onrender.com",
         "https://mnrx-mern-e-commerce-admin-app.onrender.com"
     ],
@@ -44,10 +44,9 @@ const upload = multer({ storage: storage });
 // Creating Upload endpoint for images
 app.use("/images", express.static("upload/images"));
 app.post("/upload", upload.single("product"), (req, res) => {
-    const imageUrl = `${process.env.BACKEND_URL}/images/${req.file.filename}`;
     res.json({
         success: 1,
-        image_url: imageUrl
+        image_url: `${process.env.BACKEND_URL}/images/${req.file.filename}`
     });
 });
 
@@ -100,7 +99,7 @@ app.post("/addproduct", async (req, res) => {
     const product = new Product({
         id: id,
         name: req.body.name,
-        image: req.body.image.replace('http://localhost:4000', process.env.BACKEND_URL),
+        image: req.body.image,
         category: req.body.category,
         new_price: req.body.new_price,
         old_price: req.body.old_price
