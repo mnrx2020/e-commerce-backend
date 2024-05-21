@@ -52,7 +52,7 @@ app.post("/upload", upload.single("product"), (req, res) => {
 });
 
 // Schema for Creating Products
-const Product = mongoose.model("product", {
+const productSchema = new mongoose.Schema({
     id: {
         type: Number,
         required: true
@@ -86,6 +86,8 @@ const Product = mongoose.model("product", {
         default: true
     }
 });
+
+const Product = mongoose.model("product", productSchema);
 
 // Helper function to extract filename from image URL
 const getImageFilename = (url) => {
@@ -136,6 +138,21 @@ app.get("/allproducts", async (req, res) => {
     res.send(modifiedProducts);
 });
 
+// Route to fetch a single product by its ID
+app.get("/product/:id", async (req, res) => {
+    const product = await Product.findOne({ id: req.params.id });
+    if (product) {
+        const baseImageUrl = `${process.env.BACKEND_URL}/images/`;
+        const modifiedProduct = {
+            ...product.toObject(),
+            image: baseImageUrl + product.image
+        };
+        res.json(modifiedProduct);
+    } else {
+        res.status(404).json({ message: "Product not found" });
+    }
+});
+
 // Schema creating for user model
 const Users = mongoose.model("Users", {
     name: {
@@ -157,6 +174,7 @@ const Users = mongoose.model("Users", {
     }
 });
 
+// Remaining API endpoints and middleware definitions...
 // Creating Endpoint for registering the user
 app.post("/signup", async (req, res) => {
     let check = await Users.findOne({ email: req.body.email });
@@ -211,6 +229,7 @@ app.post("/login", async (req, res) => {
 app.get("/newcollections", async (req, res) => {
     let products = await Product.find({});
     let newcollection = products.slice(1).slice(-8);
+    console.log("NewCollection Fetched");
     let modifiedCollection = newcollection.map(product => ({
         ...product.toObject(),
         image: getImageFilename(product.image)
@@ -222,6 +241,7 @@ app.get("/newcollections", async (req, res) => {
 app.get("/popularinwomen", async (req, res) => {
     let products = await Product.find({ category: "women" });
     let popular_in_women = products.slice(0, 4);
+    console.log("Popular in women fetched");
     let modifiedPopularInWomen = popular_in_women.map(product => ({
         ...product.toObject(),
         image: getImageFilename(product.image)
@@ -246,6 +266,7 @@ const fetchUser = (req, res, next) => {
 
 // Creating endpoint for adding products in cartdata
 app.post("/addtocart", fetchUser, async (req, res) => {
+    console.log("Added to cart", req.body.itemId);
     let userData = await Users.findOne({ _id: req.user.id });
     userData.cartData[req.body.itemId] += 1;
     await Users.findOneAndUpdate({ _id: req.user.id }, { cartData: userData.cartData });
@@ -254,6 +275,7 @@ app.post("/addtocart", fetchUser, async (req, res) => {
 
 // Creating endpoint to remove product from cartData
 app.post("/removefromcart", fetchUser, async (req, res) => {
+    console.log("Removed from cart", req.body.itemId);
     let userData = await Users.findOne({ _id: req.user.id });
     if (userData.cartData[req.body.itemId] > 0)
         userData.cartData[req.body.itemId] -= 1;
@@ -263,6 +285,7 @@ app.post("/removefromcart", fetchUser, async (req, res) => {
 
 // Creating endpoint to get cartData
 app.post("/getcart", fetchUser, async (req, res) => {
+    console.log("GetCart");
     let userData = await Users.findOne({ _id: req.user.id });
     res.json(userData.cartData);
 });
