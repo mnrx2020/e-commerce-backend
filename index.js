@@ -9,6 +9,13 @@ const cors = require("cors");
 require("dotenv").config();
 
 app.use(express.json());
+// Serve static files
+app.use(express.static(path.join(__dirname, 'build')));
+
+// Handle React routing, return all requests to React app
+app.get('*', function(req, res) {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
