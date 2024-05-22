@@ -159,6 +159,7 @@ app.get("/product/:id", async (req, res) => {
             image: getImageFilename(product.image)
         };
         res.json(modifiedProduct);
+        console.log(modifiedProduct);
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
     }
