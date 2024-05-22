@@ -148,7 +148,7 @@ app.get("/allproducts", async (req, res) => {
     console.log("All Products Fetched");
     let modifiedProducts = products.map(product => ({
         ...product.toObject(),
-        image: `${process.env.BACKEND_URL}/images/${getImageFilename(product.image)}`
+        image: getImageFilename(product.image)
     }));
     res.send(modifiedProducts);
 });
