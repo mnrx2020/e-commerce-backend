@@ -155,7 +155,7 @@ app.get("/product/:id", async (req, res) => {
         }
         const modifiedProduct = {
             ...product.toObject(),
-            image: `${process.env.BACKEND_URL}/images/${product.image}`
+            image: getImageFilename(product.image)
         };
         res.json(modifiedProduct);
     } catch (error) {
