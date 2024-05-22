@@ -90,6 +90,9 @@ const Product = mongoose.model("product", {
 
 // Helper function to extract filename from image URL
 const getImageFilename = (url) => {
+    if (url.includes('/images/')) {
+        return url.split('/images/').pop();
+    }
     return url.split('/').pop();
 };
 
@@ -121,14 +124,22 @@ app.post("/addproduct", async (req, res) => {
     });
 });
 
-// Creating API for deleting products
-app.post("/removeproduct", async (req, res) => {
-    await Product.findOneAndDelete({ id: req.body.id });
-    console.log("Removed");
-    res.json({
-        success: true,
-        name: req.body.name
-    });
+// Adding endpoint to fetch single product by ID
+app.get("/product/:id", async (req, res) => {
+    const productId = parseInt(req.params.id, 10);
+    try {
+        const product = await Product.findOne({ id: productId });
+        if (!product) {
+            return res.status(404).json({ error: "Product not found" });
+        }
+        const modifiedProduct = {
+            ...product.toObject(),
+            image: `${process.env.BACKEND_URL}/images/${product.image}`
+        };
+        res.json(modifiedProduct);
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
 // Creating API for getting all products
@@ -137,10 +148,11 @@ app.get("/allproducts", async (req, res) => {
     console.log("All Products Fetched");
     let modifiedProducts = products.map(product => ({
         ...product.toObject(),
-        image: getImageFilename(product.image)
+        image: `${process.env.BACKEND_URL}/images/${getImageFilename(product.image)}`
     }));
     res.send(modifiedProducts);
 });
+
 
 // Adding endpoint to fetch single product by ID
 app.get("/product/:id", async (req, res) => {
