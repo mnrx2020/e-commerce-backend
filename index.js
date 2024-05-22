@@ -124,23 +124,6 @@ app.post("/addproduct", async (req, res) => {
     });
 });
 
-// Adding endpoint to fetch single product by ID
-app.get("/product/:id", async (req, res) => {
-    const productId = parseInt(req.params.id, 10);
-    try {
-        const product = await Product.findOne({ id: productId });
-        if (!product) {
-            return res.status(404).json({ error: "Product not found" });
-        }
-        const modifiedProduct = {
-            ...product.toObject(),
-            image: `${process.env.BACKEND_URL}/images/${product.image}`
-        };
-        res.json(modifiedProduct);
-    } catch (error) {
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
 
 // Creating API for getting all products
 app.get("/allproducts", async (req, res) => {
