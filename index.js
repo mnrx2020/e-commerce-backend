@@ -10,7 +10,8 @@ const app = express();
 const port = process.env.PORT;
 
 app.use(express.json());
-app.use('/images', express.static(path.join(__dirname, 'images')));
+//app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/images', express.static(path.join(__dirname, 'upload/images')));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
     origin: [
@@ -43,7 +44,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Creating Upload endpoint for images
-app.use("/images", express.static("upload/images"));
+//app.use("/images", express.static("upload/images"));
 app.post("/upload", upload.single("product"), (req, res) => {
     res.json({
         success: 1,
