@@ -7,7 +7,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT;
 
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
@@ -52,7 +52,7 @@ app.post("/upload", upload.single("product"), (req, res) => {
 });
 
 // Schema for Creating Products
-const productSchema = new mongoose.Schema({
+const Product = mongoose.model("product", {
     id: {
         type: Number,
         required: true
@@ -87,8 +87,6 @@ const productSchema = new mongoose.Schema({
     }
 });
 
-const Product = mongoose.model("product", productSchema);
-
 // Helper function to extract filename from image URL
 const getImageFilename = (url) => {
     return url.split('/').pop();
@@ -99,7 +97,8 @@ app.post("/addproduct", async (req, res) => {
     let products = await Product.find({});
     let id;
     if (products.length > 0) {
-        let last_product = products[products.length - 1];
+        let last_product_array = products.slice(-1);
+        let last_product = last_product_array[0];
         id = last_product.id + 1;
     } else {
         id = 1;
@@ -112,7 +111,9 @@ app.post("/addproduct", async (req, res) => {
         new_price: req.body.new_price,
         old_price: req.body.old_price
     });
+    console.log(product);
     await product.save();
+    console.log("Saved");
     res.json({
         success: true,
         name: req.body.name
@@ -122,6 +123,7 @@ app.post("/addproduct", async (req, res) => {
 // Creating API for deleting products
 app.post("/removeproduct", async (req, res) => {
     await Product.findOneAndDelete({ id: req.body.id });
+    console.log("Removed");
     res.json({
         success: true,
         name: req.body.name
@@ -131,26 +133,12 @@ app.post("/removeproduct", async (req, res) => {
 // Creating API for getting all products
 app.get("/allproducts", async (req, res) => {
     let products = await Product.find({});
+    console.log("All Products Fetched");
     let modifiedProducts = products.map(product => ({
         ...product.toObject(),
         image: getImageFilename(product.image)
     }));
     res.send(modifiedProducts);
-});
-
-// Route to fetch a single product by its ID
-app.get("/product/:id", async (req, res) => {
-    const product = await Product.findOne({ id: req.params.id });
-    if (product) {
-        const baseImageUrl = `${process.env.BACKEND_URL}/images/`;
-        const modifiedProduct = {
-            ...product.toObject(),
-            image: baseImageUrl + product.image
-        };
-        res.json(modifiedProduct);
-    } else {
-        res.status(404).json({ message: "Product not found" });
-    }
 });
 
 // Schema creating for user model
@@ -174,7 +162,6 @@ const Users = mongoose.model("Users", {
     }
 });
 
-// Remaining API endpoints and middleware definitions...
 // Creating Endpoint for registering the user
 app.post("/signup", async (req, res) => {
     let check = await Users.findOne({ email: req.body.email });
