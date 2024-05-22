@@ -1,12 +1,13 @@
-const port = process.env.PORT;
 const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
 require("dotenv").config();
+
+const app = express();
+const port = process.env.PORT;
 
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
@@ -86,6 +87,12 @@ const Product = mongoose.model("product", {
     }
 });
 
+// Helper function to extract filename from image URL
+const getImageFilename = (url) => {
+    return url.split('/').pop();
+};
+
+// Creating API for adding products
 app.post("/addproduct", async (req, res) => {
     let products = await Product.find({});
     let id;
@@ -99,7 +106,7 @@ app.post("/addproduct", async (req, res) => {
     const product = new Product({
         id: id,
         name: req.body.name,
-        image: req.body.image,
+        image: getImageFilename(req.body.image),
         category: req.body.category,
         new_price: req.body.new_price,
         old_price: req.body.old_price
@@ -113,7 +120,7 @@ app.post("/addproduct", async (req, res) => {
     });
 });
 
-// Creating API For deleting products
+// Creating API for deleting products
 app.post("/removeproduct", async (req, res) => {
     await Product.findOneAndDelete({ id: req.body.id });
     console.log("Removed");
@@ -127,7 +134,11 @@ app.post("/removeproduct", async (req, res) => {
 app.get("/allproducts", async (req, res) => {
     let products = await Product.find({});
     console.log("All Products Fetched");
-    res.send(products);
+    let modifiedProducts = products.map(product => ({
+        ...product.toObject(),
+        image: getImageFilename(product.image)
+    }));
+    res.send(modifiedProducts);
 });
 
 // Schema creating for user model
@@ -206,7 +217,11 @@ app.get("/newcollections", async (req, res) => {
     let products = await Product.find({});
     let newcollection = products.slice(1).slice(-8);
     console.log("NewCollection Fetched");
-    res.send(newcollection);
+    let modifiedCollection = newcollection.map(product => ({
+        ...product.toObject(),
+        image: getImageFilename(product.image)
+    }));
+    res.send(modifiedCollection);
 });
 
 // Creating endpoint for popular in women section
@@ -214,7 +229,11 @@ app.get("/popularinwomen", async (req, res) => {
     let products = await Product.find({ category: "women" });
     let popular_in_women = products.slice(0, 4);
     console.log("Popular in women fetched");
-    res.send(popular_in_women);
+    let modifiedPopularInWomen = popular_in_women.map(product => ({
+        ...product.toObject(),
+        image: getImageFilename(product.image)
+    }));
+    res.send(modifiedPopularInWomen);
 });
 
 // Creating middleware to fetch user
