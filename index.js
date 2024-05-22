@@ -153,11 +153,7 @@ app.get("/product/:id", async (req, res) => {
         if (!product) {
             return res.status(404).json({ error: "Product not found" });
         }
-        const modifiedProduct = {
-            ...product.toObject(),
-            image: `${process.env.BACKEND_URL}/images/${product.image}`
-        };
-        res.json(modifiedProduct);
+        res.json(product);
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
     }
