@@ -90,6 +90,9 @@ const Product = mongoose.model("product", {
 
 // Helper function to extract filename from image URL
 const getImageFilename = (url) => {
+    if (url.includes('/images/')) {
+        return url.split('/images/').pop();
+    }
     return url.split('/').pop();
 };
 
