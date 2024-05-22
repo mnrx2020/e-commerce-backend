@@ -1,4 +1,6 @@
+const port = process.env.PORT;
 const express = require("express");
+const app = express();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
@@ -6,12 +8,8 @@ const path = require("path");
 const cors = require("cors");
 require("dotenv").config();
 
-const app = express();
-const port = process.env.PORT;
-
 app.use(express.json());
-//app.use('/images', express.static(path.join(__dirname, 'images')));
-app.use('/images', express.static(path.join(__dirname, 'upload/images')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
     origin: [
@@ -44,7 +42,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Creating Upload endpoint for images
-//app.use("/images", express.static("upload/images"));
+app.use("/images", express.static("upload/images"));
 app.post("/upload", upload.single("product"), (req, res) => {
     res.json({
         success: 1,
@@ -88,15 +86,6 @@ const Product = mongoose.model("product", {
     }
 });
 
-// Helper function to extract filename from image URL
-const getImageFilename = (url) => {
-    if (url.includes('/images/')) {
-        return url.split('/images/').pop();
-    }
-    return url.split('/').pop();
-};
-
-// Creating API for adding products
 app.post("/addproduct", async (req, res) => {
     let products = await Product.find({});
     let id;
@@ -110,7 +99,7 @@ app.post("/addproduct", async (req, res) => {
     const product = new Product({
         id: id,
         name: req.body.name,
-        image: getImageFilename(req.body.image),
+        image: req.body.image,
         category: req.body.category,
         new_price: req.body.new_price,
         old_price: req.body.old_price
@@ -124,40 +113,22 @@ app.post("/addproduct", async (req, res) => {
     });
 });
 
+// Creating API For deleting products
+app.post("/removeproduct", async (req, res) => {
+    await Product.findOneAndDelete({ id: req.body.id });
+    console.log("Removed");
+    res.json({
+        success: true,
+        name: req.body.name
+    });
+});
 
 // Creating API for getting all products
 app.get("/allproducts", async (req, res) => {
     let products = await Product.find({});
     console.log("All Products Fetched");
-    let modifiedProducts = products.map(product => ({
-        ...product.toObject(),
-        image: getImageFilename(product.image)
-    }));
-    res.send(modifiedProducts);
+    res.send(products);
 });
-
-
-// Adding endpoint to fetch single product by ID
-// Adding endpoint to fetch single product by ID
-app.get("/product/:id", async (req, res) => {
-    const productId = parseInt(req.params.id, 10);
-    console.log("Product ID:", productId); // Log the product ID
-    try {
-        const product = await Product.findOne({ id: productId });
-        if (!product) {
-            return res.status(404).json({ error: "Product not found" });
-        }
-        const modifiedProduct = {
-            ...product.toObject(),
-            image: `${process.env.BACKEND_URL}/images/${product.image}`
-        };
-        res.json(modifiedProduct);
-    } catch (error) {
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
-
 
 // Schema creating for user model
 const Users = mongoose.model("Users", {
@@ -235,11 +206,7 @@ app.get("/newcollections", async (req, res) => {
     let products = await Product.find({});
     let newcollection = products.slice(1).slice(-8);
     console.log("NewCollection Fetched");
-    let modifiedCollection = newcollection.map(product => ({
-        ...product.toObject(),
-        image: getImageFilename(product.image)
-    }));
-    res.send(modifiedCollection);
+    res.send(newcollection);
 });
 
 // Creating endpoint for popular in women section
@@ -247,11 +214,7 @@ app.get("/popularinwomen", async (req, res) => {
     let products = await Product.find({ category: "women" });
     let popular_in_women = products.slice(0, 4);
     console.log("Popular in women fetched");
-    let modifiedPopularInWomen = popular_in_women.map(product => ({
-        ...product.toObject(),
-        image: getImageFilename(product.image)
-    }));
-    res.send(modifiedPopularInWomen);
+    res.send(popular_in_women);
 });
 
 // Creating middleware to fetch user
