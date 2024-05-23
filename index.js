@@ -10,7 +10,6 @@ const app = express();
 const port = process.env.PORT;
 
 app.use(express.json());
-//app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/images', express.static(path.join(__dirname, 'upload/images')));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
@@ -44,7 +43,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Creating Upload endpoint for images
-//app.use("/images", express.static("upload/images"));
 app.post("/upload", upload.single("product"), (req, res) => {
     res.json({
         success: 1,
@@ -162,9 +160,6 @@ app.get("/product/:id", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
-
-
 
 // Schema creating for user model
 const Users = mongoose.model("Users", {
@@ -300,6 +295,14 @@ app.post("/getcart", fetchUser, async (req, res) => {
     console.log("GetCart");
     let userData = await Users.findOne({ _id: req.user.id });
     res.json(userData.cartData);
+});
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+// Catch-all handler to return the `index.html` file for any request that doesn't match an existing route or file
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
 app.listen(port, (error) => {
